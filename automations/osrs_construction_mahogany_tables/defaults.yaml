@@ -1,0 +1,95 @@
+# Defaults for the Mahogany table + Demon Butler automation.
+#
+# `python -m autokit init osrs_construction_mahogany_tables` copies this file to
+# profiles/osrs_construction_mahogany_tables/<profile>/settings.yaml. Edit the
+# copy; anything you delete there falls back to the value here. Unknown keys
+# are rejected so typos are caught at start-up.
+
+run:
+  max_tables: 0            # stop after this many build+remove cycles (0 = no limit)
+  max_minutes: 0           # stop after this many minutes (0 = no limit)
+  status_every_s: 15       # how often to log a status line
+
+safety:
+  emergency_hotkey: "<f12>"          # pynput syntax, e.g. "<f12>" or "<ctrl>+<shift>+x"
+  stop_file: STOP                    # creating this file in the profile folder stops the run
+  manual_mouse_tolerance_px: 30      # moving the mouse yourself by more than this stops the run
+  max_consecutive_failures: 3        # failed interactions in a row before giving up
+  disconnect_grace_s: 15             # wait this long (sending nothing) for a lost connection to recover
+  unrecognised_grace_s: 3            # re-check an unrecognised screen this long before stopping
+
+timing:
+  poll_interval_s: 0.08
+  menu_timeout_s: 1.5                # right-click menu open/close
+  furniture_menu_timeout_s: 3.0
+  build_timeout_s: 6.0               # furniture menu click -> table visible + planks used
+  remove_timeout_s: 5.0
+  dialogue_open_timeout_s: 4.0       # click on butler -> his dialogue appears
+  dialogue_step_timeout_s: 3.0       # one dialogue action -> the dialogue changes
+  dialogue_timeout_s: 30.0           # a whole conversation
+  dialogue_settle_s: 1.5             # how long text may take to appear before it counts as unrecognised
+  departure_timeout_s: 4.0           # order submitted -> butler gone
+  wait_poll_s: 0.4                   # idle polling while waiting for a delivery
+
+mouse:
+  min_move_s: 0.10
+  max_move_s: 0.60
+  curvature: 0.15                    # sideways bend of mouse paths (fraction of distance)
+  max_bend_px: 60
+
+construction:
+  planks_per_table: 6
+  remove_confirm_key: "1"            # pressed only after `remove_confirm` is recognised
+  close_interface_key: escape        # used to close the furniture menu if `furniture_close` is not calibrated
+  hotspot_min_pixels: 40             # smallest highlight blob accepted as the table/hotspot
+  require_xp_drop: false             # also require the `xp_drop_construction` template after each build
+
+inventory:
+  other_items: 3                     # non-plank items (hammer, saw, coins); used only when
+                                     # `inventory_empty_slot` is not calibrated
+
+butler:
+  enabled: true
+  refill_threshold: 12               # order when planks in inventory <= this (and no trip is pending)
+  request_quantity: 24               # planks per order (4 tables)
+  max_carry: 26                      # the Demon Butler's capacity
+  expected_trip_s: 7.2
+  trip_timeout_s: 30                 # a trip taking longer than this is overdue
+  arrival_timeout_s: 10              # summon -> butler visible or his dialogue open
+  max_order_attempts: 3              # failed orders in a row before refills are disabled
+  max_summons_per_trip: 2
+  pay_wages: true                    # pay through the visible wage dialogue when asked
+  talk_mode: left_click              # left_click | menu (right-click -> `menu_talk_to_butler`)
+  use_repeat_option: true            # use `butler_opt_repeat_order` when visible ...
+  repeat_option_quantity: 24         # ... only if the captured label is for this many planks
+  summon_method: house_options       # house_options | bell_pull | none
+  summon_steps:
+    house_options:
+      - {click: tab_settings, wait_for: settings_house_options}
+      - {click: settings_house_options, wait_for: house_options_call_butler}
+      - {click: house_options_call_butler}
+      - {click: tab_inventory, wait_for: inventory_open}
+    bell_pull:
+      - {interact: bell_pull, option: menu_ring_bell_pull}
+
+  # Dialogues that may simply be left open: the next action in the game world closes them.
+  safe_open_dialogues: [butler_main_options]
+
+  # Rules for butler (and other known) dialogues, tried in order; the first whose
+  # `when` labels are all visible (and `unless` labels are not) is applied.
+  # Rules mentioning labels you have not calibrated are skipped automatically.
+  rules:
+    - {name: pay wages, when: [butler_wage_request, butler_opt_pay_wage], click: butler_opt_pay_wage, signal: wage_paid}
+    - {name: cannot pay wages, when: [butler_wage_insufficient], key: space, fail: "not enough coins to pay the butler's wages"}
+    - {name: acknowledge delivery, when: [butler_returned_msg], key: space, signal: butler_returned}
+    - {name: acknowledge held items, when: [butler_holding_msg], key: space, signal: butler_returned}
+    - {name: acknowledge level up, when: [level_up_msg], key: space}
+
+  # Extra rules used only while placing an order. `{quantity}` = request_quantity.
+  order_rules:
+    - {name: repeat previous order, when: [butler_opt_repeat_order], click: butler_opt_repeat_order, signal: order_submitted}
+    - {name: choose mahogany planks, when: [butler_opt_mahogany_planks], click: butler_opt_mahogany_planks}
+    - {name: enter quantity, when: [prompt_enter_amount], type: "{quantity}", enter: true, signal: order_submitted}
+    - {name: fetch from bank, when: [butler_opt_fetch], click: butler_opt_fetch}
+    - {name: open planks list, when: [butler_opt_planks], click: butler_opt_planks}
+    - {name: next page, when: [butler_opt_more], click: butler_opt_more}
