@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import math
 from collections import Counter
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any
 
@@ -81,9 +81,11 @@ class MahoganyTables(Automation):
             self._perception = Perception(self.ctx.profile, self.settings, self.rules, self.order_rules)
         return self._perception
 
-    def required_groups(self) -> set[str]:
+    @classmethod
+    def required_groups(cls, settings: Mapping[str, Any]) -> set[str]:
+        """``core``, plus the butler and the configured summon method when refills are on."""
         groups = {"core"}
-        butler = self.settings.butler
+        butler = Settings.from_dict(dict(settings)).butler
         if butler.enabled:
             groups.add("butler")
             if butler.summon_method != "none":
@@ -94,7 +96,8 @@ class MahoganyTables(Automation):
         profile = self.ctx.profile
         library = profile.templates
         problems = [
-            f"{s.kind} '{s.name}' is not calibrated" for s in self.missing_assets(profile, self.required_groups())
+            f"{s.kind} '{s.name}' is not calibrated"
+            for s in self.missing_assets(profile, self.required_groups(profile.settings))
         ]
         if profile.anchor_rect is None:
             problems.append(f"the anchor '{ANCHOR}' has no recorded position; calibrate it first")

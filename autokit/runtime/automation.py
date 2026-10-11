@@ -5,7 +5,7 @@ from __future__ import annotations
 import dataclasses
 import random
 from abc import ABC, abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, ClassVar, TypeVar
@@ -151,6 +151,11 @@ class Automation(ABC):
     @classmethod
     def simulation(cls, scenario: str, seed: int) -> Any:
         """Return a simulation bundle for dry runs, or ``None`` if unsupported."""
+        return None
+
+    @classmethod
+    def required_groups(cls, settings: Mapping[str, Any]) -> set[str] | None:
+        """Asset groups the given settings need (``None`` = every group)."""
         return None
 
     @classmethod

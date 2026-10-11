@@ -80,9 +80,10 @@ def cmd_calibrate(args: argparse.Namespace) -> int:
     screen = MssScreen(args.monitor)
     only = [n.strip() for n in args.only.split(",")] if args.only else None
     run_wizard(cls, profile, screen.grab, only=only, delay=args.delay)
-    missing = cls.missing_assets(profile)
+    missing = cls.missing_assets(profile, cls.required_groups(profile.settings))
     if missing:
-        print("\nstill missing (required): " + ", ".join(s.name for s in missing))
+        names = ", ".join(f"{s.name} ({s.kind})" for s in missing)
+        print(f"\nstill missing (required with your settings.yaml): {names}")
     else:
         print("\nall required assets are calibrated; verify with `check` before `run`")
     return 0

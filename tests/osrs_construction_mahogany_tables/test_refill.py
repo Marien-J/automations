@@ -80,3 +80,12 @@ def test_wages_are_never_paid_when_disabled():
     rules = _settings(pay_wages=False).rules()
     assert all(r.signal != "wage_paid" for r in rules)
     assert rules[0].fail and rules[0].when == ("butler_wage_request",)
+
+
+def test_only_the_configured_summon_method_is_required():
+    defaults = yaml.safe_load(MahoganyTables.defaults_file().read_text())
+    assert MahoganyTables.required_groups(defaults) == {"core", "butler", "summon_house_options"}
+    bell = deep_merge(defaults, {"butler": {"summon_method": "bell_pull"}})
+    assert MahoganyTables.required_groups(bell) == {"core", "butler", "summon_bell_pull"}
+    off = deep_merge(defaults, {"butler": {"enabled": False}})
+    assert MahoganyTables.required_groups(off) == {"core"}

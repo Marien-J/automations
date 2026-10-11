@@ -94,7 +94,7 @@ def store_asset(profile: Profile, spec: AssetSpec, frame: Frame, rect: Rect, anc
         rgb = pick_marker_color(crop.image)
         tolerance = spec.default.tolerance if isinstance(spec.default, ColorSpec) else 12
         profile.set_color(spec.name, ColorSpec(rgb, tolerance))
-        result = f"saved colour {spec.name} = RGB{rgb} ±{tolerance}"
+        result = f"saved colour {spec.name} = RGB{rgb} ±{tolerance} (in calibration.json; colours are not images)"
     elif spec.kind == "region":
         offset = _anchor_offset(profile, anchor, frame)
         if offset is None and anchor is not None:
