@@ -24,6 +24,7 @@ Not for official RuneScape worlds.
 
 ```bash
 python -m venv .venv && source .venv/bin/activate     # Windows: .venv\Scripts\activate
+python -m pip install --upgrade pip                   # editable installs need pip >= 21.3
 pip install -e ".[dev]"
 
 python -m autokit list
@@ -50,3 +51,7 @@ Python 3.10+. On machines without a display (CI), install
 `opencv-python-headless` instead of `opencv-python`. The emergency hotkey and
 input need a desktop session: on macOS, grant Accessibility permission; on
 Linux, use X11.
+
+**Windows / WSL:** run the automation with Windows Python, from PowerShell, on
+the same desktop as RuneLite. A process inside WSL cannot see Windows windows
+or send them input. WSL is still fine for editing, `pytest` and `simulate`.
