@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# Local, per-user calibration and run logs (screenshots of your client).
+profiles/*
+!profiles/README.md
